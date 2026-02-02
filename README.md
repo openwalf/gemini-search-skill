@@ -13,10 +13,22 @@
 
 ## 安装
 
+### 1. 安装依赖
+
 ```powershell
 cd skills\gemini-search
 npm install
 ```
+
+### 2. 在 Claude Code 中安装
+
+在 Claude Code 终端中运行以下命令（请使用实际的绝对路径）：
+
+```bash
+/skill add /path/to/gemini-search
+```
+
+安装后，您可以通过 `/skill list` 查看，或直接使用 `/search` 和 `/fetch` 命令。
 
 ## 环境变量配置
 
@@ -42,6 +54,13 @@ copy .env.example .env
 ```
 
 ## 使用方法
+
+### Claude Code 斜杠命令 (推荐)
+
+安装后可直接在 Claude Code 中使用：
+
+- **搜索**: `/search query="关键词" numResults=5`
+- **获取网页**: `/fetch url="https://example.com" prompt="分析内容"`
 
 ### 作为模块导入
 
