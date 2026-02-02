@@ -1,1 +1,73 @@
-{"name": "gemini-search", "version": "1.0.0", "description": "使用Gemini 3 Flash的OpenAI兼容协议实现Google Search功能，替代web_search和web_fetch", "type": "search", "entryPoint": "index.js", "author": "iFlow CLI", "dependencies": {}, "environment": {"requiredEnvVars": ["GEMINI_BASE_URL", "GEMINI_API_KEY"]}}
+{
+  "name": "gemini-search",
+  "version": "1.0.0",
+  "description": "使用 Gemini 2.5 Flash Lite 的 OpenAI 兼容协议实现 Google Search 功能，替代 web_search 和 web_fetch",
+  "type": "search",
+  "entryPoint": "index.js",
+  "author": "iFlow CLI",
+  "license": "MIT",
+  "keywords": ["gemini", "search", "google", "web-search", "openai", "fetch"],
+  "dependencies": {},
+  "environment": {
+    "requiredEnvVars": ["GEMINI_BASE_URL", "GEMINI_API_KEY"],
+    "optionalEnvVars": [],
+    "description": {
+      "GEMINI_BASE_URL": "OpenAI 兼容的 API 基础 URL，例如 https://generativelanguage.googleapis.com/v1beta/openai",
+      "GEMINI_API_KEY": "Gemini API 密钥，从 https://makersuite.google.com/ 获取"
+    }
+  },
+  "commands": [
+    {
+      "name": "search",
+      "description": "使用 Google 搜索网络内容",
+      "parameters": {
+        "query": {
+          "type": "string",
+          "required": true,
+          "description": "搜索查询",
+          "maxLength": 1000
+        },
+        "numResults": {
+          "type": "number",
+          "required": false,
+          "default": 10,
+          "min": 1,
+          "max": 100,
+          "description": "返回结果数量"
+        },
+        "timeRange": {
+          "type": "string",
+          "required": false,
+          "description": "时间范围过滤"
+        }
+      }
+    },
+    {
+      "name": "fetch",
+      "description": "获取并分析网页内容",
+      "parameters": {
+        "url": {
+          "type": "string",
+          "required": true,
+          "description": "目标网页 URL"
+        },
+        "prompt": {
+          "type": "string",
+          "required": false,
+          "default": "",
+          "maxLength": 2000,
+          "description": "分析提示词"
+        }
+      }
+    }
+  ],
+  "model": {
+    "name": "gemini-2.5-flash-lite",
+    "provider": "google"
+  },
+  "timeout": 30000,
+  "documentation": {
+    "readme": "README.md",
+    "example": "example.js"
+  }
+}
