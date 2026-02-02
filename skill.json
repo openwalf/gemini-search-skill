@@ -1,0 +1,1 @@
+{"name": "gemini-search", "version": "1.0.0", "description": "使用Gemini 3 Flash的OpenAI兼容协议实现Google Search功能，替代web_search和web_fetch", "type": "search", "entryPoint": "index.js", "author": "iFlow CLI", "dependencies": {}, "environment": {"requiredEnvVars": ["GEMINI_BASE_URL", "GEMINI_API_KEY"]}}
