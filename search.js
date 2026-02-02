@@ -6,9 +6,21 @@ class GeminiSearch {
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY is required');
     }
-    this.baseUrl = baseUrl.replace(/\/$/, '');
+    
+    // 验证baseUrl格式
+    try {
+      const url = new URL(baseUrl);
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        throw new Error('Invalid protocol');
+      }
+      this.baseUrl = baseUrl.replace(/\/$/, '');
+    } catch (e) {
+      throw new Error('Invalid GEMINI_BASE_URL format');
+    }
+    
     this.apiKey = apiKey;
     this.model = 'gemini-2.5-flash-lite';
+    this.timeout = 30000; // 30秒超时
   }
 
   async callGemini(messages, tools = null) {
@@ -24,29 +36,50 @@ class GeminiSearch {
       requestBody.tools = tools;
     }
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
-      },
-      body: JSON.stringify(requestBody)
-    });
+    // 添加超时控制
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`API request failed: ${response.status} - ${error}`);
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        throw new Error('Invalid API response format');
+      }
+      
+      return data.choices[0].message.content;
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout');
+      }
+      throw error;
     }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
   }
 
   async search(query, options = {}) {
     try {
       const { numResults = 10, timeRange } = options;
       
-      const prompt = this.buildSearchPrompt(query, numResults, timeRange);
+      // 验证numResults边界
+      const validatedNumResults = Math.max(1, Math.min(100, parseInt(numResults) || 10));
+      
+      const prompt = this.buildSearchPrompt(query, validatedNumResults, timeRange);
       
       // 使用正确的Google搜索工具配置
       const text = await this.callGemini([
@@ -61,6 +94,13 @@ class GeminiSearch {
 
   async fetch(url, prompt = '') {
     try {
+      // 验证URL格式
+      try {
+        new URL(url);
+      } catch (e) {
+        throw new Error('Invalid URL format');
+      }
+      
       const fullPrompt = prompt 
         ? `Please fetch and analyze the content from ${url}. Task: ${prompt}`
         : `Please fetch and summarize the content from ${url}`;

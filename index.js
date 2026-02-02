@@ -38,6 +38,17 @@ class GeminiSearchSkill {
     if (!query) {
       throw new Error('Query parameter is required for search');
     }
+    
+    // 验证query类型和长度
+    if (typeof query !== 'string') {
+      throw new Error('Query must be a string');
+    }
+    if (query.trim().length === 0) {
+      throw new Error('Query cannot be empty');
+    }
+    if (query.length > 1000) {
+      throw new Error('Query too long (max 1000 characters)');
+    }
 
     const results = await this.searchEngine.search(query, { 
       numResults, 
@@ -57,6 +68,18 @@ class GeminiSearchSkill {
     
     if (!url) {
       throw new Error('URL parameter is required for fetch');
+    }
+    
+    // 验证URL
+    try {
+      new URL(url);
+    } catch (e) {
+      throw new Error('Invalid URL format');
+    }
+    
+    // 验证prompt长度
+    if (typeof prompt === 'string' && prompt.length > 2000) {
+      throw new Error('Prompt too long (max 2000 characters)');
     }
 
     const result = await this.searchEngine.fetch(url, prompt);
@@ -81,6 +104,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.log('  search "<query>" [options]');
     console.log('  fetch "<url>" [prompt]');
     console.log('');
+    console.log('Options:');
+    console.log('  --num <number>    Number of results (1-100, default: 10)');
+    console.log('  --time <range>    Time range for search');
+    console.log('');
     console.log('Environment variables:');
     console.log('  GEMINI_BASE_URL - Base URL for OpenAI-compatible API');
     console.log('  GEMINI_API_KEY - Your API key');
@@ -90,31 +117,53 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const command = args[0];
   const params = {};
 
-  if (command === 'search') {
-    params.query = args[1];
-    if (args.includes('--num')) {
-      const numIndex = args.indexOf('--num');
-      params.numResults = parseInt(args[numIndex + 1]) || 10;
+  try {
+    if (command === 'search') {
+      if (!args[1]) {
+        throw new Error('Search query is required');
+      }
+      params.query = args[1];
+      
+      if (args.includes('--num')) {
+        const numIndex = args.indexOf('--num');
+        const numValue = parseInt(args[numIndex + 1]);
+        if (isNaN(numValue) || numValue < 1 || numValue > 100) {
+          throw new Error('--num must be a number between 1 and 100');
+        }
+        params.numResults = numValue;
+      }
+      
+      if (args.includes('--time')) {
+        const timeIndex = args.indexOf('--time');
+        if (args[timeIndex + 1]) {
+          params.timeRange = args[timeIndex + 1];
+        }
+      }
+    } else if (command === 'fetch') {
+      if (!args[1]) {
+        throw new Error('URL is required for fetch');
+      }
+      params.url = args[1];
+      
+      if (args[2]) {
+        params.prompt = args[2];
+      }
+    } else {
+      throw new Error(`Unknown command: ${command}`);
     }
-    if (args.includes('--time')) {
-      const timeIndex = args.indexOf('--time');
-      params.timeRange = args[timeIndex + 1];
-    }
-  } else if (command === 'fetch') {
-    params.url = args[1];
-    if (args[2]) {
-      params.prompt = args[2];
-    }
-  }
 
-  skill.execute(command, params)
-    .then(result => {
-      console.log(JSON.stringify(result, null, 2));
-    })
-    .catch(error => {
-      console.error('Error:', error.message);
-      process.exit(1);
-    });
+    skill.execute(command, params)
+      .then(result => {
+        console.log(JSON.stringify(result, null, 2));
+      })
+      .catch(error => {
+        console.error('Error:', error.message);
+        process.exit(1);
+      });
+  } catch (error) {
+    console.error('Error:', error.message);
+    process.exit(1);
+  }
 }
 
 export default skill;
