@@ -1,7 +1,7 @@
 {
   "name": "gemini-search",
-  "version": "1.0.0",
-  "description": "使用 Gemini 2.5 Flash Lite 的 OpenAI 兼容协议实现 Google Search 功能，替代 web_search 和 web_fetch",
+  "version": "1.2.0",
+  "description": "使用 Gemini API 进行增强的网络搜索和网页内容分析",
   "type": "search",
   "entryPoint": "index.js",
   "author": "iFlow CLI",
@@ -10,10 +10,11 @@
   "dependencies": {},
   "environment": {
     "requiredEnvVars": ["GEMINI_BASE_URL", "GEMINI_API_KEY"],
-    "optionalEnvVars": [],
+    "optionalEnvVars": ["GEMINI_MODEL"],
     "description": {
       "GEMINI_BASE_URL": "OpenAI 兼容的 API 基础 URL，例如 https://generativelanguage.googleapis.com/v1beta/openai",
-      "GEMINI_API_KEY": "Gemini API 密钥，从 https://makersuite.google.com/ 获取"
+      "GEMINI_API_KEY": "Gemini API 密钥，从 https://aistudio.google.com/ 获取",
+      "GEMINI_MODEL": "默认使用的模型名称，默认为 gemini-2.5-flash-lite"
     }
   },
   "commands": [
@@ -39,6 +40,17 @@
           "type": "string",
           "required": false,
           "description": "时间范围过滤"
+        },
+        "json": {
+          "type": "boolean",
+          "required": false,
+          "default": true,
+          "description": "是否返回结构化 JSON 结果"
+        },
+        "model": {
+          "type": "string",
+          "required": false,
+          "description": "覆盖默认模型"
         }
       }
     },
@@ -57,6 +69,11 @@
           "default": "",
           "maxLength": 2000,
           "description": "分析提示词"
+        },
+        "model": {
+          "type": "string",
+          "required": false,
+          "description": "覆盖默认模型"
         }
       }
     }
