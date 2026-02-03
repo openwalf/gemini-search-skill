@@ -8,7 +8,7 @@ class GeminiSearch {
    * @param {string} baseUrl - API 基础 URL
    * @param {string} apiKey - API 密钥
    * @param {Object} options - 配置选项
-   * @param {string} options.model - 模型名称 (默认: gemini-2.0-flash-exp)
+   * @param {string} options.model - 模型名称 (默认: gemini-2.5-flash-lite)
    * @param {number} options.timeout - 超时时间 (毫秒, 默认: 30000)
    * @param {number} options.retryAttempts - 重试次数 (默认: 3)
    * @param {number} options.retryDelay - 重试延迟基数 (毫秒, 默认: 1000)

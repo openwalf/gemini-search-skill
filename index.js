@@ -21,9 +21,10 @@ class GeminiSearchSkill {
   _log(level, message, data = null) {
     const timestamp = new Date().toISOString();
 
-    if (process.env.NODE_ENV !== 'production') {
+    // 只有在非生产环境下才输出日志，且使用 console.error 避免干扰 stdout
+    if (process.env.NODE_ENV !== 'production' || level === 'error') {
       const logMethod = level === 'error' ? console.error :
-                        level === 'warn' ? console.warn : console.log;
+                        level === 'warn' ? console.warn : console.error; // 使用 error 而非 log
 
       let displayData = '';
       if (data) {
@@ -189,8 +190,9 @@ class GeminiSearchSkill {
   getInfo() {
     return {
       name: 'gemini-search',
-      version: '1.1.0',
-      description: '使用 Gemini API 进行网络搜索和网页内容获取 (支持 JSON 结构化输出)',
+      version: '1.2.0',
+      description: '使用 Gemini API 进行增强的网络搜索和网页内容分析',
+      type: 'search',
       commands: ['search', 'fetch'],
       model: this.model,
       initialized: this.initialized
@@ -202,7 +204,40 @@ class GeminiSearchSkill {
 const skill = new GeminiSearchSkill();
 
 // 命令行接口
-if (import.meta.url === `file://${process.argv[1]}`) {
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+/**
+ * 检查是否为主模块
+ * 在 Windows 环境下需要处理路径 normalize
+ */
+function checkIsMainModule() {
+  try {
+    const filename = fileURLToPath(import.meta.url);
+    const scriptPath = process.argv[1];
+
+    if (!scriptPath) return false;
+
+    const resolvedScriptPath = path.resolve(scriptPath);
+    const resolvedFilename = path.resolve(filename);
+
+    const isWindows = process.platform === 'win32';
+    const normalize = (p) => isWindows ? p.toLowerCase() : p;
+
+    const normScript = normalize(resolvedScriptPath);
+    const normFile = normalize(resolvedFilename);
+
+    // 处理 Windows 下可能丢失扩展名的情况，同时在 Windows 下忽略大小写
+    return normScript === normFile ||
+           normScript === normFile.slice(0, -path.extname(normFile).length);
+  } catch (e) {
+    return false;
+  }
+}
+
+const isMainModule = checkIsMainModule();
+
+if (isMainModule) {
   const args = process.argv.slice(2);
 
   // 显示帮助信息
@@ -236,7 +271,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   // 显示版本信息
   if (args[0] === '--version' || args[0] === '-v') {
-    console.log('Gemini Search Skill v1.1.0');
+    console.log('Gemini Search Skill v1.2.0');
     process.exit(0);
   }
 
@@ -298,8 +333,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
           params.model = args[modelIndex + 1];
         }
       }
-    } else {
+    } else if (command && !command.startsWith('-')) {
+      // 如果 command 存在且不是以 - 开头（即不是参数），则认为是未知命令
       throw new Error(`Unknown command: ${command}. Use --help for usage information.`);
+    } else if (!command) {
+      // 没有任何命令时显示帮助
+      console.log('Gemini Search Skill - 命令行工具');
+      console.log('使用 --help 查看帮助信息');
+      process.exit(0);
     }
 
     // 更新 skill 的模型（如果命令行指定了）

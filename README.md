@@ -15,8 +15,8 @@
 
 ### 1. 安装依赖
 
-```powershell
-cd skills\gemini-search
+```bash
+cd skills/gemini-search
 npm install
 ```
 
@@ -48,10 +48,15 @@ npm install
 ### 配置方法
 
 **使用 .env 文件:**
-```powershell
-copy .env.example .env
+```bash
+cp .env.example .env
 # 编辑 .env 文件填入实际值
 ```
+
+**命令行设置 (临时):**
+- **Bash**: `export GEMINI_API_KEY=your_key`
+- **PowerShell**: `$env:GEMINI_API_KEY="your_key"`
+- **CMD**: `set GEMINI_API_KEY=your_key`
 
 ## 使用方法
 
@@ -90,7 +95,7 @@ console.log(fetchResult.content);
 
 ### 命令行使用
 
-```powershell
+```bash
 # 显示帮助
 node index.js --help
 
